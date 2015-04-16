@@ -213,6 +213,7 @@
                 var $titleElement = $('<div/>');
                 var $messageElement = $('<div/>');
                 var $progressElement = $('<div/>');
+                var $blockerElement = $('<div class="toast-blocker"/>');
                 var $closeElement = $(options.closeHtml);
                 var progressBar = {
                     intervalId: null,
@@ -248,6 +249,7 @@
                     setCloseButton();
                     setProgressBar();
                     setSequence();
+                    setBlocker();
                 }
 
                 function handleEvents() {
@@ -324,6 +326,17 @@
                     if (options.closeButton) {
                         $closeElement.addClass('toast-close-button').attr('role', 'button');
                         $toastElement.prepend($closeElement);
+                    }
+                }
+
+                function setBlocker() {
+                    if (options.blockUi) {
+                        $('body').prepend($blockerElement);
+                        $container.on("DOMNodeRemoved", function(e) {
+                            if(e.target == $toastElement[0]) {
+                                $blockerElement.remove();
+                            }
+                        });
                     }
                 }
 
