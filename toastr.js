@@ -223,8 +223,8 @@
                 var $timerElement = $(
                     '<div class="toast-timer">' +
                         '<svg>' +
-                            '<path fill="none" stroke="#ffffff" stroke-width="4" />' +
-                            '<text fill="#ffffff" text-anchor="middle" dominant-baseline="central">01:00</text>' +
+                            '<path fill="none" stroke="#ffffff" />' +
+                            '<text fill="#ffffff" text-anchor="middle" dominant-baseline="central"></text>' +
                         '</svg>' +
                     '</div>'
                 );
