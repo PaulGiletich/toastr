@@ -184,7 +184,12 @@
                     closeHtml: '<button type="button">&times;</button>',
                     newestOnTop: true,
                     preventDuplicates: false,
-                    progressBar: false
+                    progressBar: false,
+                    showTimer: false,
+                    timerOptions: {
+                        size: 56,
+                        stroke: 5
+                    }
                 };
             }
 
@@ -215,6 +220,14 @@
                 var $progressElement = $('<div/>');
                 var $blockerElement = $('<div class="toast-blocker"/>');
                 var $closeElement = $(options.closeHtml);
+                var $timerElement = $(
+                    '<div class="toast-timer">' +
+                        '<svg>' +
+                            '<path fill="none" stroke="#ffffff" stroke-width="4" />' +
+                            '<text fill="#ffffff" text-anchor="middle" dominant-baseline="central">01:00</text>' +
+                        '</svg>' +
+                    '</div>'
+                );
                 var progressBar = {
                     intervalId: null,
                     hideEta: null,
@@ -288,9 +301,9 @@
                         intervalId = setTimeout(hideToast, options.timeOut);
                         progressBar.maxHideTime = parseFloat(options.timeOut);
                         progressBar.hideEta = new Date().getTime() + progressBar.maxHideTime;
-                        if (options.progressBar) {
+                        //if (options.progressBar) {
                             progressBar.intervalId = setInterval(updateProgress, 10);
-                        }
+                        //}
                     }
                 }
 
@@ -319,6 +332,16 @@
                     if (map.message) {
                         $messageElement.append(map.message).addClass(options.messageClass);
                         $toastElement.append($messageElement);
+                    }
+                    if(options.showTimer) {
+                        var size = options.timerOptions.size;
+                        var stroke = options.timerOptions.stroke;
+
+                        $toastElement.prepend($timerElement);
+                        $timerElement.find("svg").css({width: size, height: size});
+                        $timerElement.find("text").attr({x: size/2, y: size/2});
+                        $timerElement.find("path")
+                            .attr('stroke-width', stroke);
                     }
                 }
 
@@ -387,6 +410,7 @@
                 }
 
                 function stickAround() {
+                    progressBar.maxHideTime = parseFloat(options.extendedTimeOut);
                     clearTimeout(intervalId);
                     progressBar.hideEta = 0;
                     $toastElement.stop(true, true)[options.showMethod](
@@ -396,7 +420,24 @@
 
                 function updateProgress() {
                     var percentage = ((progressBar.hideEta - (new Date().getTime())) / progressBar.maxHideTime) * 100;
+                    if(percentage < 0) {
+                        percentage = 100;
+                    }
+
                     $progressElement.width(percentage + '%');
+                    if (options.showTimer) {
+                        var size = options.timerOptions.size;
+                        var stroke = options.timerOptions.stroke;
+
+                        $timerElement.find("path")
+                            .attr("d", describeArc(size/2, size/2, size/2 - stroke / 2, (100-percentage) * 360 / 100, 359.99));
+
+                        var totalSeconds = percentage * progressBar.maxHideTime / 100 / 1000;
+                        var seconds = Math.floor(totalSeconds % 60);
+                        var minutes = Math.floor(totalSeconds / 60);
+                        var text = pad(minutes || 0, 2) + ':' + pad(seconds || 0, 2);
+                        $timerElement.find('text').text(text);
+                    }
                 }
             }
 
@@ -418,6 +459,37 @@
             }
 
         })();
+
+
+        function polarToCartesian(centerX, centerY, radius, angleInDegrees) {
+            var angleInRadians = (angleInDegrees-90) * Math.PI / 180.0;
+
+            return {
+                x: centerX + (radius * Math.cos(angleInRadians)),
+                y: centerY + (radius * Math.sin(angleInRadians))
+            };
+        }
+
+        function describeArc(x, y, radius, startAngle, endAngle){
+
+            var start = polarToCartesian(x, y, radius, endAngle);
+            var end = polarToCartesian(x, y, radius, startAngle);
+
+            var arcSweep = endAngle - startAngle <= 180 ? "0" : "1";
+
+            var d = [
+                "M", start.x, start.y,
+                "A", radius, radius, 0, arcSweep, 0, end.x, end.y
+            ].join(" ");
+
+            return d;
+        }
+
+        function pad(n, width, z) {
+            z = z || '0';
+            n = n + '';
+            return n.length >= width ? n : new Array(width - n.length + 1).join(z) + n;
+        }
     });
 }(typeof define === 'function' && define.amd ? define : function (deps, factory) {
     if (typeof module !== 'undefined' && module.exports) { //Node
