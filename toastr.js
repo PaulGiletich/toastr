@@ -189,7 +189,8 @@
                     timerOptions: {
                         size: 56,
                         stroke: 5
-                    }
+                    },
+                    noExtendedTimeout: false
                 };
             }
 
@@ -266,7 +267,10 @@
                 }
 
                 function handleEvents() {
-                    $toastElement.hover(stickAround, delayedHideToast);
+                    if(!options.noExtendedTimeout) {
+                        $toastElement.hover(stickAround, delayedHideToast);
+                    }
+
                     if (!options.onclick && options.tapToDismiss) {
                         $toastElement.click(hideToast);
                     }
